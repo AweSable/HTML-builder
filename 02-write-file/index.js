@@ -12,12 +12,9 @@ console.log('Enter the text you want to write to the file:');
 rl.on('line', (input) => {
 	if (input == 'exit'){
 		rl.close();
-		ws.close();
-		console.log('Have a nice day');
 	} else ws.write(input + '\r\n');
 })
 rl.on('close', () => {
-	rl.close();
 	ws.close();
 	console.log('Have a nice day');
 })
