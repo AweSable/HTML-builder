@@ -1,13 +1,3 @@
-/*
-Импорт всех требуемых модулей
-Прочтение и сохранение в переменной файла-шаблона
-  Заменяет шаблонные теги в файле template.html с названиями файлов из папки components (пример:{{section}}) на содержимое одноимённых компонентов и сохраняет результат в project-dist/index.html.
-Нахождение всех имён тегов в файле шаблона
-Замена шаблонных тегов содержимым файлов-компонентов
-Запись изменённого шаблона в файл index.html в папке project-dist
-Использовать скрипт написанный в задании 05-merge-styles для создания файла style.css
-Использовать скрипт из задания 04-copy-directory для переноса папки assets в папку project-dist
-*/
 const fs = require('fs');
 const path = require('path');
 const templateFile = path.join(__dirname, 'template.html');
@@ -28,18 +18,19 @@ rs.on('readable', () => {
       fileNames.push(str.slice(foundPos + 2, endPos));
       pos = foundPos + 3;
     }
-    const ws = fs.createWriteStream(path.join(folderNameNew, 'index.html'), 'utf-8');
+
     fileNames.map(item => {
       const currentFileReadStream = fs.createReadStream(path.join(__dirname, 'components', item + '.html'), 'utf-8');
       currentFileReadStream.on('readable', () => {
         const htmlCode = currentFileReadStream.read();
         if (htmlCode) {
           str = str.replace('{{' + item + '}}', htmlCode);
+        } else {
+          const ws = fs.createWriteStream(path.join(folderNameNew, 'index.html'), 'utf-8');
           ws.write(str);
         }
       })
     })
-
   }
 })
 
@@ -62,3 +53,23 @@ fs.readdir(stylesFolder, {encoding: 'utf8', withFileTypes: true}, (err, files) =
     
   });
 });
+
+const assetsFolder = path.join(__dirname, 'assets');
+const newAssetsFolder = path.join(folderNameNew, 'assets');
+function copyFolder(folder = assetsFolder, newFolder = newAssetsFolder) {
+  fs.readdir(folder, {encoding: 'utf8', withFileTypes: true}, (err, files) => {
+    if (err) console.log(err);
+    files.map(item => {
+      if (item.isFile()) {
+        fs.copyFile(path.join(folder, item.name), path.join(newFolder, item.name), (err) => {
+          if (err) console.log(err);
+        });
+      } else {
+        fsPromises.mkdir(path.join(newFolder, item.name), {recursive: true}).then( (p) => {
+          copyFolder(path.join(folder, item.name), path.join(newFolder, item.name))
+        });
+      }
+    });
+  })
+}
+copyFolder();
